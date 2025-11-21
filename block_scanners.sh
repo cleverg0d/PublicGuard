@@ -181,8 +181,14 @@ require_cmd() {
     fi
   fi
   
-  echo "[!] Failed to find $cmd after installation. It may be installed but not in PATH." >&2
-  echo "[!] Please ensure $pkg is properly installed and accessible." >&2
+  echo "[!] Failed to find $cmd after installation." >&2
+  echo "[!] Searching for $cmd in system paths..." >&2
+  for path in /usr/local/sbin /usr/sbin /sbin /usr/local/bin /usr/bin /bin; do
+    if [[ -f "$path/$cmd" ]]; then
+      echo "[!] Found $cmd at $path/$cmd but it's not executable or not in PATH" >&2
+    fi
+  done
+  echo "[!] Please ensure $pkg is properly installed: apt install $pkg" >&2
   return 1
 }
 
