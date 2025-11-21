@@ -1,0 +1,61 @@
+# Acunetix
+updates.acunetix.com
+erp.acunetix.com
+bxss.me
+telemetry.invicti.com
+
+# IP Logger
+2no.co
+ezstat.ru
+iplogger.org
+iplogger.com
+iplogger.ru
+yip.su
+iplogger.co
+iplogger.info
+ipgrabber.ru
+ipgraber.ru
+iplis.ru
+02ip.ru
+grabify.link
+
+# Cyberhaven
+parrottalks.info
+ext.linewizeconnect.com
+readermodeext.info
+bookmarkfc.info
+censortracker.pro
+yujaverity.info
+wayinai.live
+vpncity.live
+moonsift.store
+cyberhavenext.pro
+api.cyberhavenext.pro
+internxtvpn.pro
+primusext.pro
+uvoice.live
+
+# Atomic Stealer (AMOS)
+94.142.138.177
+194.169.175.117
+41.216.183.214
+45.142.122.92
+89.208.103.185
+
+# Lumma Stealer IPs
+5.42.64.45
+5.42.64.83
+5.42.65.108
+5.42.65.114
+31.41.244.77
+45.61.137.213
+49.13.89.149
+77.246.158.48
+81.31.245.209
+95.217.234.153
+140.82.20.165
+185.172.128.132
+185.215.113.55
+188.120.227.9
+193.149.189.199
+195.85.115.195
