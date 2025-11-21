@@ -103,12 +103,37 @@ install_package() {
   fi
 }
 
+find_command() {
+  local cmd="$1"
+  # Try multiple methods and paths
+  if command -v "$cmd" >/dev/null 2>&1; then
+    command -v "$cmd"
+    return 0
+  fi
+  
+  # Check common system paths
+  for path in /usr/local/sbin /usr/sbin /sbin /usr/local/bin /usr/bin /bin; do
+    if [[ -x "$path/$cmd" ]]; then
+      echo "$path/$cmd"
+      return 0
+    fi
+  done
+  
+  return 1
+}
+
 require_cmd() {
   local cmd="$1"
   local pkg="${2:-$cmd}"
   
-  # Check if command exists (try multiple methods)
-  if command -v "$cmd" >/dev/null 2>&1 || which "$cmd" >/dev/null 2>&1 || [[ -x "/usr/sbin/$cmd" ]] || [[ -x "/sbin/$cmd" ]]; then
+  # Try to find command first
+  local cmd_path
+  if cmd_path=$(find_command "$cmd"); then
+    # Add directory to PATH if not already there
+    local cmd_dir=$(dirname "$cmd_path")
+    if [[ ":$PATH:" != *":$cmd_dir:"* ]]; then
+      export PATH="$cmd_dir:$PATH"
+    fi
     return 0
   fi
   
@@ -135,31 +160,29 @@ require_cmd() {
       ;;
   esac
   
-  # Verify installation - check multiple locations
-  if command -v "$cmd" >/dev/null 2>&1 || which "$cmd" >/dev/null 2>&1; then
-    return 0
-  fi
-  
-  # Check common system paths
-  if [[ -x "/usr/sbin/$cmd" ]] || [[ -x "/sbin/$cmd" ]] || [[ -x "/usr/bin/$cmd" ]]; then
+  # After installation, try to find command again
+  if cmd_path=$(find_command "$cmd"); then
+    local cmd_dir=$(dirname "$cmd_path")
+    if [[ ":$PATH:" != *":$cmd_dir:"* ]]; then
+      export PATH="$cmd_dir:$PATH"
+    fi
+    echo "[+] Found $cmd at $cmd_path"
     return 0
   fi
   
   # For fail2ban, check alternative command names
   if [[ "$pkg" == "fail2ban" ]]; then
-    if command -v fail2ban-server >/dev/null 2>&1 || command -v fail2ban >/dev/null 2>&1; then
+    if cmd_path=$(find_command "fail2ban-server") || cmd_path=$(find_command "fail2ban"); then
+      local cmd_dir=$(dirname "$cmd_path")
+      if [[ ":$PATH:" != *":$cmd_dir:"* ]]; then
+        export PATH="$cmd_dir:$PATH"
+      fi
       return 0
     fi
   fi
   
-  # For iptables, it might be installed but not in PATH - try to find it
-  if [[ "$cmd" == "iptables" ]] || [[ "$cmd" == "ip6tables" ]]; then
-    if [[ -x "/usr/sbin/$cmd" ]] || [[ -x "/sbin/$cmd" ]]; then
-      return 0
-    fi
-  fi
-  
-  echo "[!] Failed to install $pkg. Please install it manually." >&2
+  echo "[!] Failed to find $cmd after installation. It may be installed but not in PATH." >&2
+  echo "[!] Please ensure $pkg is properly installed and accessible." >&2
   return 1
 }
 
@@ -391,14 +414,19 @@ main() {
   
   echo "[+] Checking dependencies..."
   
-  # Check iptables/ip6tables - they might be in /sbin or /usr/sbin
-  if ! command -v iptables >/dev/null 2>&1; then
-    if [[ -x "/sbin/iptables" ]]; then
-      export PATH="/sbin:$PATH"
-    elif [[ -x "/usr/sbin/iptables" ]]; then
-      export PATH="/usr/sbin:$PATH"
+  # Ensure system paths are in PATH for iptables/ip6tables
+  export PATH="/usr/local/sbin:/usr/sbin:/sbin:$PATH"
+  
+  # Find iptables location and add to PATH if needed
+  for ipt_path in /sbin/iptables /usr/sbin/iptables /usr/local/sbin/iptables /bin/iptables /usr/bin/iptables; do
+    if [[ -x "$ipt_path" ]]; then
+      ipt_dir=$(dirname "$ipt_path")
+      if [[ ":$PATH:" != *":$ipt_dir:"* ]]; then
+        export PATH="$ipt_dir:$PATH"
+      fi
+      break
     fi
-  fi
+  done
   
   require_cmd iptables
   require_cmd ip6tables
